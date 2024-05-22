@@ -1,4 +1,4 @@
-from game.fields.Field import Field
+from game.entities.fields.Field import Field
 
 class TransportationField(Field):
     def __init__(self, num, name, buy_price, img, owner=None):

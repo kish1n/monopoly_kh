@@ -1,4 +1,4 @@
-from game.fields.Field import Field
+from game.entities.fields.Field import Field
 
 class ChanceField(Field):
     def land_on_field(self, player):

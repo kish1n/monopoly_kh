@@ -1,4 +1,4 @@
-from game.fields.Field import Field
+from game.entities.fields.Field import Field
 
 class PrisonField(Field):
     def land_on_field(self, player):

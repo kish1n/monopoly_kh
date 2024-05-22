@@ -1,4 +1,4 @@
-from game.fields.Field import Field
+from game.entities.fields.Field import Field
 
 class PropertyField(Field):
     def __init__(self, num, name, group, buy_price, mortgage, rent_prices, house_prices,
