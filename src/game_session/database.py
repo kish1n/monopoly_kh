@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from src.database import Base
 from uuid import uuid4
@@ -23,7 +23,8 @@ class GameUser(Base):
     name = Column(String)
     money = Column(Integer, default=1500)
     position = Column(Integer, default=0)
-    in_jail = Column(Integer, default=0)
+    queue = Column(Integer, default=0)
+    in_jail = Column(Boolean, default=False)
     session_id = Column(Integer, ForeignKey('game_session.id'))
 
     session = relationship("GameSession", back_populates="players")

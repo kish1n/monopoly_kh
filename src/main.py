@@ -1,6 +1,8 @@
 import os
 from fastapi import FastAPI, Depends
 from fastapi_users import FastAPIUsers
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 
 from src.auth.manager import get_user_manager
 from src.auth.schemas import UserRead, UserCreate
@@ -8,12 +10,14 @@ from src.auth.base_config import auth_backend
 from src.auth.models import User
 
 from src.game_session.router import router as game_session_router
-
+from src.game_session.websocket import router as game_session_websocket_router
 from src.core import Core
 
 app = FastAPI(
     title="Kharkiv monopoly",
 )
+
+app.mount("/templates", StaticFiles(directory="templates"), name="templates")
 
 fastapi_users = FastAPIUsers[User, int](
     get_user_manager,
@@ -33,8 +37,9 @@ app.include_router(
 )
 
 app.include_router(game_session_router)
+app.include_router(game_session_websocket_router)
 
-@app.get("/")
-async def startup_event():
-    #await Core.create_tables()
-    return {"message": "rework db done"}
+@app.get("/", response_class=HTMLResponse)
+async def get():
+    with open("templates/monopoly.html") as f:
+        return HTMLResponse(content=f.read(), status_code=200)

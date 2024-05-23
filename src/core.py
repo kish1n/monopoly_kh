@@ -36,34 +36,3 @@ class Core:
             await session.commit()
 
             return new_game_session.id
-
-    @staticmethod
-    async def join_game_session(session_id: str, name: str):
-        async with session_factory() as session:
-            async with session.begin():
-                game_session = select(GameSession).filter(GameSession.id == session_id)
-                game_session = await session.execute(game_session)
-                game_session = game_session.scalars().one_or_none()
-
-                if not game_session:
-                    raise HTTPException(status_code=404, detail="Game session not found")
-
-                if game_session.current_players_count >= game_session.max_players:
-                    raise HTTPException(status_code=400, detail="Game session is full")
-
-                new_game_user = GameUser(
-                    name=name,
-                    money=1500,
-                    position=game_session.current_players_count,
-                    in_jail=0,
-                    session_id=game_session.id
-                )
-
-                session.add(new_game_user)
-                game_session.current_players_count += 1
-
-                await session.commit()
-
-                return new_game_user
-
-

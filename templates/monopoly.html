@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Test</h1>
+    <form action="" onsubmit="sendMessage(event)">
+        <input type="text" id="messageText" autocomplete="off"/>
+        <button>Send</button>
+    </form>
+    <button onclick="rollDice()">Roll Dice</button>
+    <ul id='messages'>
+    </ul>
+    <script>
+        const session_id = "2"; // Замените на реальный session ID
+        const player_id = "your-player-id"; // Замените на реальный player ID
+        const ws = new WebSocket(`ws://localhost:8000/ws/${session_id}`);
+        ws.onmessage = function(event) {
+            const messages = document.getElementById('messages')
+            const message = document.createElement('li')
+            message.appendChild(document.createTextNode(event.data))
+            messages.appendChild(message)
+        };
+        function sendMessage(event) {
+            const input = document.getElementById("messageText")
+            ws.send("join:" + input.value)
+            input.value = ''
+            event.preventDefault()
+        }
+        function rollDice() {
+            ws.send("roll:" + player_id)
+        }
+    </script>
+</body>
+</html>

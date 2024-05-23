@@ -10,6 +10,7 @@ from src.auth.models import User
 from src.database import get_session
 
 from src.core import Core
+from src.game_session.game_core import GameCore
 from src.game_session.database import GameSession, GameUser
 from src.auth.base_config import current_user
 
@@ -27,7 +28,7 @@ async def create_game_session():
 @router.post("/join/{session_id}")
 async def join_game_session(session_id: int, name: str):
     try:
-        new_user = await Core.join_game_session(session_id, name)
+        new_user = await GameCore.join_game_session(session_id, name)
         return new_user
     except HTTPException as e:
         raise e
