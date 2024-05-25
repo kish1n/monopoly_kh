@@ -17,6 +17,8 @@ class GameCore:
     async def join_game_session(session_id: str, name: str):
         async with session_factory() as session:
             async with session.begin():
+                print(f"Joining game session {session_id}")
+                session_id = int(session_id)
                 result = await session.execute(
                     select(GameSession).filter(GameSession.id == session_id)
                 )
@@ -30,7 +32,7 @@ class GameCore:
                 new_game_user = GameUser(
                     name=name,
                     money=1500,
-                    position=game_session.current_players_count,
+                    queue=game_session.current_players_count,
                     in_jail=0,
                     session_id=game_session.id
                 )
@@ -135,3 +137,23 @@ class GameCore:
     async def update_player_in_jail(session_id: str, player_id: str, in_jail: bool):
         # Call the universal update function
         return await GameCore.update_player_attribute(session_id, player_id, 'in_jail', in_jail)
+
+    @staticmethod
+    async def get_players(session_id: int):  # Изменение типа на int
+        async with session_factory() as session:
+            result = await session.execute(
+                select(GameUser).filter(GameUser.session_id == session_id)
+            )
+            players = result.scalars().all()
+            return [
+                {
+                    "id": player.id,
+                    "name": player.name,
+                    "money": player.money,
+                    "queue": player.queue,
+                    "position": player.position
+                }
+                for player in players
+            ]
+
+

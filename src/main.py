@@ -1,5 +1,6 @@
 import os
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Request
+from fastapi.responses import Response
 from fastapi_users import FastAPIUsers
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
@@ -39,7 +40,15 @@ app.include_router(
 app.include_router(game_session_router)
 app.include_router(game_session_websocket_router)
 
+@app.middleware("http")
+async def add_cache_control_header(request: Request, call_next):
+    response: Response = await call_next(request)
+    if request.url.path.startswith("/static"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
 @app.get("/", response_class=HTMLResponse)
 async def get():
+    await Core.create_tables()
     with open("templates/monopoly.html") as f:
         return HTMLResponse(content=f.read(), status_code=200)

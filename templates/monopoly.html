@@ -1,36 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>WebSocket Test</title>
+    <title>Game Session</title>
+    <link rel="stylesheet" type="text/css" href="templates/css/monopoly.css">
 </head>
 <body>
-    <h1>WebSocket Test</h1>
-    <form action="" onsubmit="sendMessage(event)">
-        <input type="text" id="messageText" autocomplete="off"/>
-        <button>Send</button>
+
+    <h1>Game Session</h1>
+    <a href="https://www.instagram.com/d_nechay_/">Legenda</a>
+    <form action="" onsubmit="joinGame(event)">
+        <input type="text" id="sessionNum" autocomplete="off" placeholder="Enter session number"/>
+        <input type="text" id="playerName" autocomplete="off" placeholder="Enter player name"/>
+        <button>Join Game</button>
     </form>
+
     <button onclick="rollDice()">Roll Dice</button>
-    <ul id='messages'>
-    </ul>
-    <script>
-        const session_id = "2"; // Замените на реальный session ID
-        const player_id = "your-player-id"; // Замените на реальный player ID
-        const ws = new WebSocket(`ws://localhost:8000/ws/${session_id}`);
-        ws.onmessage = function(event) {
-            const messages = document.getElementById('messages')
-            const message = document.createElement('li')
-            message.appendChild(document.createTextNode(event.data))
-            messages.appendChild(message)
-        };
-        function sendMessage(event) {
-            const input = document.getElementById("messageText")
-            ws.send("join:" + input.value)
-            input.value = ''
-            event.preventDefault()
-        }
-        function rollDice() {
-            ws.send("roll:" + player_id)
-        }
-    </script>
+    <table>
+        <thead>
+            <tr>
+                <th id="playerId">Player ID</th>
+                <th>Player</th>
+                <th>Money</th>
+                <th>Queue</th>
+                <th>Position</th>
+            </tr>
+        </thead>
+        <tbody id="players">
+            <!-- Player rows will be added here dynamically -->
+        </tbody>
+    </table>
+    <script src="templates/js/monopoly.js"></script>
 </body>
 </html>

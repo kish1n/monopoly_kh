@@ -1,4 +1,4 @@
-class User11111:
+class User:
     def __init__(self, game_id, name, color, starting_money=1500):
         self.game_id = game_id
         self.name = name

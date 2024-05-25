@@ -1,15 +1,15 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import HTMLResponse
+from starlette.websockets import WebSocketState
 from uuid import uuid4
 import random
+import json
 
 from src.game_session.database import GameSession, GameUser
 from src.core import Core
 from src.game_session.game_core import GameCore
-router = APIRouter(
-    tags=["game_session"],
-    prefix="/game_session"
-)
+
+router = APIRouter()
 
 class ConnectionManager:
     def __init__(self):
@@ -26,13 +26,11 @@ class ConnectionManager:
         if not self.active_connections[session_id]:
             del self.active_connections[session_id]
 
-    async def send_personal_message(self, message: str, websocket: WebSocket):
-        await websocket.send_text(message)
-
-    async def broadcast(self, message: str, session_id: str):
+    async def broadcast(self, message: dict, session_id: str):
         if session_id in self.active_connections:
             for connection in self.active_connections[session_id]:
-                await connection.send_text(message)
+                if connection.client_state == WebSocketState.CONNECTED:
+                    await connection.send_text(json.dumps(message))
 
 manager = ConnectionManager()
 
@@ -42,20 +40,36 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
     try:
         while True:
             data = await websocket.receive_text()
-            if data.startswith("join"):
-                player_name = data.split(":")[1]
-                new_player = await GameCore.join_game_session(session_id, player_name)
-                await manager.broadcast(f"Player {player_name} joined the game.", session_id)
+            print(f"Received data: {data}")
+            move = data.split(':')[1].split(",")[0][1:-1]
+            print(move)
+            if move == "join":
 
-                game_session = await GameCore.update_game_status_if_ready(session_id)
-                if game_session.status == "active":
-                    await manager.broadcast(f"Game started!", session_id)
-            elif data.startswith("roll"):
-                player_id = data.split(":")[1]
-                roll_result, updated_player = await GameCore.roll_dice_and_update_position(session_id, player_id)
-                await manager.broadcast(f"Player {player_id} rolled {roll_result} and moved to position {updated_player.position}.", session_id)
+                player_name = data.split(":")[2][1:-2]
+                await manager.broadcast({"type": "message", "message": f"Player {player_name} joined the game."}, session_id)
+                await GameCore.join_game_session(session_id, player_name)
+                players = await GameCore.get_players(int(session_id))
+                print("Player joined the game")
+                await manager.broadcast({"type": "update", "players": players}, session_id)
+
+            elif move == "roll":
+
+                await manager.broadcast({"type": "roll", "message": f"Player {player_name} joined the game."},
+                                        session_id)
+                print(data)
+                player_id = data.split(":")[2][1:-2]
+                print(player_id)
+                #roll_result = await GameCore.roll_dice_and_update_position(int(session_id), int(player_id))
+                # await manager.broadcast({"type": "roll_result", "player_id": player_id, "roll_result": roll_result},
+                #                         session_id)
+
             else:
-                await manager.broadcast(f"Message text was: {data}", session_id)
+                await manager.broadcast({"type": "message", "message": f"Message text was: {data}"}, session_id)
     except WebSocketDisconnect:
+        print(f"WebSocket connection closed for session {session_id}")
         manager.disconnect(websocket, session_id)
-        await manager.broadcast(f"Player disconnected", session_id)
+        await manager.broadcast({"type": "message", "message": "Player disconnected"}, session_id)
+    except Exception as e:
+        print(f"WebSocket connection error: {e}")
+        if websocket.client_state == WebSocketState.CONNECTED:
+            print("Sending error message")
