@@ -8,31 +8,47 @@ from sqlalchemy.dialects.postgresql import insert
 
 
 from src.database import session_factory, engine, Base
-from src.game_session.database import GameUser, GameSession
-from src.auth.models import User
-from src.auth.base_config import current_user
-
+from src.game.database import Player, GameSession, Board, Propertie, possessions_state
 
 class Core:
     @staticmethod
     async def create_tables():
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-            await conn.run_sync(Base.metadata.create_all)
+            tables_to_create_and_drop = [
+                GameSession.__table__,
+                Player.__table__,
+                Board.__table__,
+                #Propertie.__table__
+            ]
+            await conn.run_sync(Base.metadata.drop_all, tables=tables_to_create_and_drop)
+            await conn.run_sync(Base.metadata.create_all, tables=tables_to_create_and_drop)
             await conn.commit()
 
     @staticmethod
-    async def create_game_session():
+    async def create_game_session(name: str):
         async with session_factory() as session:
-            async with session.begin():
-                new_game_session = GameSession(
-                    status="waiting",
-                    current_player_index=0,
-                    max_players=4,
-                    current_players_count=0
+            # Проверяем наличие сессии с таким же именем
+            new_game_session = GameSession(
+                name=name,
+                is_active=True
+            )
+
+            session.add(new_game_session)
+            await session.commit()  # Коммит после добавления сессии
+            await session.refresh(new_game_session)  # Обновляем сессию для получения ID
+
+        async with session_factory() as session:
+            for i in range(1, 10):
+                field = await session.execute(select(Propertie).filter_by(id=i))
+                res = field.scalars().first()
+                new_board = Board(
+                    game_session_id=new_game_session.id,
+                    type=res.type,
+                    property_id=res.id,
                 )
-                session.add(new_game_session)
-                await session.flush()
+                session.add(new_board)
+
             await session.commit()
+            await session.refresh(new_board)
 
             return new_game_session.id

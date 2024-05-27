@@ -10,8 +10,8 @@ from src.auth.schemas import UserRead, UserCreate
 from src.auth.base_config import auth_backend
 from src.auth.models import User
 
-from src.game_session.router import router as game_session_router
-from src.game_session.websocket import router as game_session_websocket_router
+from src.game.router import router as game_session_router
+from src.game.websocket import router as game_session_websocket_router
 from src.core import Core
 
 app = FastAPI(
@@ -38,7 +38,7 @@ app.include_router(
 )
 
 app.include_router(game_session_router)
-app.include_router(game_session_websocket_router)
+# app.include_router(game_session_websocket_router)
 
 @app.middleware("http")
 async def add_cache_control_header(request: Request, call_next):
@@ -49,6 +49,6 @@ async def add_cache_control_header(request: Request, call_next):
 
 @app.get("/", response_class=HTMLResponse)
 async def get():
-    await Core.create_tables()
-    with open("templates/monopoly.html") as f:
+    #await Core.create_tables()
+    with open("templates/html/monopoly.html") as f:
         return HTMLResponse(content=f.read(), status_code=200)

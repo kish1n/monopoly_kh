@@ -5,9 +5,9 @@ from uuid import uuid4
 import random
 import json
 
-from src.game_session.database import GameSession, GameUser
+from src.game.database import GameSession, Player
 from src.core import Core
-from src.game_session.game_core import GameCore
+from src.game.game_core import GameCore
 
 router = APIRouter()
 
@@ -41,33 +41,39 @@ async def websocket_endpoint(websocket: WebSocket, session_id: str):
         while True:
             data = await websocket.receive_text()
             print(f"Received data: {data}")
-            move = data.split(':')[1].split(",")[0][1:-1]
-            print(move)
-            if move == "join":
+            message = json.loads(data)
+            action = message.get("action")
 
+            if action == "join":
                 player_name = data.split(":")[2][1:-2]
-                await manager.broadcast({"type": "message", "message": f"Player {player_name} joined the game."}, session_id)
+                await manager.broadcast(
+                    {"type": "message", "message": f"Player {player_name} joined the game."},
+                    session_id
+                )
                 await GameCore.join_game_session(session_id, player_name)
                 players = await GameCore.get_players(int(session_id))
                 print("Player joined the game")
-                await manager.broadcast({"type": "update", "players": players}, session_id)
+                await manager.broadcast(
+                    {"type": "update", "players": players},
+                    session_id
+                )
 
-            elif move == "roll":
-
-                await manager.broadcast({"type": "roll", "message": f"Player {player_name} joined the game."},
-                                        session_id)
-                print(data)
-                player_id = data.split(":")[2][1:-2]
-                print(player_id)
-                #roll_result = await GameCore.roll_dice_and_update_position(int(session_id), int(player_id))
-                # await manager.broadcast({"type": "roll_result", "player_id": player_id, "roll_result": roll_result},
-                #                         session_id)
-
+            elif action == "roll":
+                player_id = action.get("id")
+                roll_result, updated_player = await GameCore.roll_dice_and_update_position(session_id, player_id)
+                await manager.broadcast({
+                    "type": "update",
+                    "message": f"Player {player_id} rolled {roll_result} and moved to position {updated_player.position}.",
+                    "players": await GameCore.get_players(session_id)
+                }, session_id)
             else:
-                await manager.broadcast({"type": "message", "message": f"Message text was: {data}"}, session_id)
+                await manager.broadcast(
+                    {"type": "message", "message": f"Message text was: {data}"},
+                    session_id
+                )
+
     except WebSocketDisconnect:
         print(f"WebSocket connection closed for session {session_id}")
-        manager.disconnect(websocket, session_id)
         await manager.broadcast({"type": "message", "message": "Player disconnected"}, session_id)
     except Exception as e:
         print(f"WebSocket connection error: {e}")

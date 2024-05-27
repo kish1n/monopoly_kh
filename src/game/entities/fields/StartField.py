@@ -1,4 +1,4 @@
-from game.entities.fields.Field import Field
+from src.game.entities.fields.Field import Field
 
 class StartField(Field):
     def land_on_field(self, player):

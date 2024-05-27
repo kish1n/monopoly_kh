@@ -1,7 +1,7 @@
 let ws;
 
 function connectWebSocket(session_id) {
-    ws = new WebSocket(`ws://localhost:8000/ws/${session_id}`);
+    ws = new WebSocket(`ws://localhost:8080/ws/${session_id}`);
 
     ws.onopen = function() {
         console.log("WebSocket connection opened");
@@ -13,6 +13,12 @@ function connectWebSocket(session_id) {
             updatePlayers(data.players);
         } else if (data.type === 'message') {
             console.log(data.message);
+        } else if (data.type === 'error') {
+            console.log(data.error);
+        } else if (data.type === 'roll') {
+            rollDice();
+        } else {
+            console.log("Unknown message type", data);
         }
     };
 
@@ -42,9 +48,22 @@ function joinGame(event) {
 }
 
 function rollDice() {
+    console.log("Rolling dice");
     const playerId = document.getElementById("playerId").value;
-    if (playerId && ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ action: 'roll', id:playerId  }));
+    const sessionId = 1;
+    console.log("Rolling dice", playerId, sessionId);
+    if (sessionId && playerId) {
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
+            connectWebSocket(sessionId);
+            ws.onopen = function() {
+                console.log("WebSocket connection opened");
+                ws.send(JSON.stringify({ action: 'roll', id: playerId }));
+            };
+        } else {
+            ws.send(JSON.stringify({ action: 'roll', id: playerId }));
+        }
+    } else {
+        console.log("Invalid session id or player name");
     }
 }
 

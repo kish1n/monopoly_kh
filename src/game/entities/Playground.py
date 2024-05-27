@@ -1,4 +1,4 @@
-from game.entities.Dice import Dice
+from src.game.entities.Dice import Dice
 
 class Playground:
     def __init__(self):
