@@ -1,14 +1,8 @@
-from fastapi import HTTPException, Depends
-from sqlalchemy import and_, asc, desc, func, Integer, cast, update
-from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.future import select
-from sqlalchemy.orm import selectinload, joinedload
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.dialects.postgresql import insert
-
 
 from src.database import session_factory, engine, Base
-from src.game.database import Player, GameSession, Board, Propertie, possessions_state
+from src.models import Player, GameSession, Board, Propertie
+
 
 class Core:
     @staticmethod

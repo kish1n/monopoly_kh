@@ -1,13 +1,8 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from starlette.websockets import WebSocketState
-from uuid import uuid4
-import random
 import json
 
-from src.game.database import GameSession, Player
-from src.core import Core
-from src.game.game_core import GameCore
+from src.game.core import GameCore
 
 router = APIRouter()
 

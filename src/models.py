@@ -64,7 +64,6 @@ class GameSession(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
-    #possessions_state = Column(JSONB, nullable=False, default=dict)  # Добавляем поле JSONB
     players = relationship("Player", back_populates="game_session")
 
 
@@ -89,10 +88,11 @@ class Board(Base):
     id = Column(Integer, primary_key=True, index=True)
     game_session_id = Column(Integer, ForeignKey('game_session.id'), nullable=False)
     property_id = Column(Integer, ForeignKey('propertie.id'), nullable=True)
-    type = Column(String, nullable=False)  # 'property', 'chance', 'community_chest', etc.
+    type = Column(String, nullable=False)
     owner_id = Column(Integer, ForeignKey('player.id'), nullable=True)  # Владелец, если есть
-
     game_session = relationship("GameSession", back_populates="board_fields")
+    hotel_level = Column(Integer, default=0)
+    mogage = Column(Boolean, default=False)
     property = relationship("Propertie")
     owner = relationship("Player", back_populates="owned_fields")
 
