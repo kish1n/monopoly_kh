@@ -32,7 +32,7 @@ class Core:
             await session.refresh(new_game_session)  # Обновляем сессию для получения ID
 
         async with session_factory() as session:
-            for i in range(1, 10):
+            for i in range(1, 11):
                 field = await session.execute(select(Propertie).filter_by(id=i))
                 res = field.scalars().first()
                 new_board = Board(

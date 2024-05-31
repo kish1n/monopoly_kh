@@ -39,3 +39,25 @@ async def get_players(session_id: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/{session_id}/get_session_data")
+async def get_session_data(session_id: int):
+    try:
+        session_data = await GameCore.get_sesion_data(session_id=session_id)
+        return session_data
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/{session_id}/make_trade")
+async def make_trade(session_id: int, player_id: int, target_player_id: int, amount):
+    try:
+        await GameCore.make_trade(session_id, player_id, target_player_id, amount)
+        return {"status": "ok"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+

@@ -92,7 +92,7 @@ class Board(Base):
     owner_id = Column(Integer, ForeignKey('player.id'), nullable=True)  # Владелец, если есть
     game_session = relationship("GameSession", back_populates="board_fields")
     hotel_level = Column(Integer, default=0)
-    mogage = Column(Boolean, default=False)
+    mortgage = Column(Integer, default=0)
     property = relationship("Propertie")
     owner = relationship("Player", back_populates="owned_fields")
 
