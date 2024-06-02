@@ -3,49 +3,6 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from src.database import Base
 
-possessions_state = {
-    #start
-    1: {'improvement': 0, 'mortgage': False},
-    #schanse
-    3: {'improvement': 0, 'mortgage': False},
-    #donat
-    5: {'improvement': 0, 'mortgage': False},
-    6: {'improvement': 0, 'mortgage': False},
-    #surp
-    8: {'improvement': 0, 'mortgage': False},
-    9: {'improvement': 0, 'mortgage': False},
-    #durka
-    11: {'improvement': 0, 'mortgage': False},
-    12: {'improvement': 0, 'mortgage': False},
-    13: {'improvement': 0, 'mortgage': False},
-    14: {'improvement': 0, 'mortgage': False},
-    15: {'improvement': 0, 'mortgage': False},
-    16: {'improvement': 0, 'mortgage': False},
-    #schanse
-    18: {'improvement': 0, 'mortgage': False},
-    19: {'improvement': 0, 'mortgage': False},
-    #metalis
-    21: {'improvement': 0, 'mortgage': False},
-    #surp
-    23: {'improvement': 0, 'mortgage': False},
-    24: {'improvement': 0, 'mortgage': False},
-    25: {'improvement': 0, 'mortgage': False},
-    26: {'improvement': 0, 'mortgage': False},
-    27: {'improvement': 0, 'mortgage': False},
-    28: {'improvement': 0, 'mortgage': False},
-    29: {'improvement': 0, 'mortgage': False},
-    #go to durka
-    31: {'improvement': 0, 'mortgage': False},
-    32: {'improvement': 0, 'mortgage': False},
-    #schanse
-    34: {'improvement': 0, 'mortgage': False},
-    35: {'improvement': 0, 'mortgage': False},
-    #surp
-    37: {'improvement': 0, 'mortgage': False},
-    38: {'improvement': 0, 'mortgage': False},
-    39: {'improvement': 0, 'mortgage': False},
-}
-
 class Propertie(Base):
     __tablename__ = 'propertie'
 

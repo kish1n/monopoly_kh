@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Game Session</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <h1>Game Session</h1>
+    <h2>Players</h2>
+    <table id="playersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Balance</th>
+                <th>Position</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <h2>Properties</h2>
+    <table id="propertiesTable">
+        <thead>
+            <tr>
+                <th>Number</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Price</th>
+                <th>Owner ID</th>
+                <th>Street Color</th>
+                <th>Hotel Level</th>
+                <th>Mortgage</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <!-- Добавляем кнопку и поле -->
+    <h2>Roll Dice</h2>
+    <button onclick="rollDice()">Roll Dice</button>
+    <p>Result: <span id="diceResult"></span></p>
+
+
+    <script>
+        const sessionId = "{{ session_id }}";
+    </script>
+    <script src="/static/js/session.js"></script>
+</body>
+</html>

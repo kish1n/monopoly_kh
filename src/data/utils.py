@@ -60,18 +60,20 @@ class DataGetter:
 
     @staticmethod
     async def get_hotels_at_str(session, str_color: str, session_id: int):
-        props = await session.execute(
-            select(Propertie)
-            .filter(Propertie.street_color == str_color)
-        ).scalars().all()
+        result = await session.execute(
+            select(Propertie).filter(Propertie.street_color == str_color)
+        )
+        props = result.scalars().all()
 
         hotels = 0
+
         for prop in props:
-            board = await session.execute(
+            result = await session.execute(
                 select(Board)
                 .filter(Board.game_session_id == session_id)
                 .filter(Board.property_id == prop.id)
-            ).scalars().one_or_none()
+            )
+            board = result.scalars().one_or_none()
             if board:
                 hotels += board.hotel_level
 
@@ -93,6 +95,7 @@ class DataGetter:
             select(Propertie).filter(Propertie.id == property_id)
         )
         prop = result.scalars().one_or_none()
+
         if not prop:
             raise ValueError(f"Property with id '{property_id}' does not exist.")
         return prop.street_color
@@ -209,9 +212,12 @@ class DataChecker:
     @staticmethod
     async def check_properties_and_update_ownership(session, properties: List[str], play_ground, session_id: int,
                                                     current_owner_id: int, new_owner_id: int):
+
         for prop in properties:
             color = await DataGetter.get_str_color_by_id(session, int(prop))
-            hotels = await DataGetter.get_hotels_at_str(session, color, session_id)
+            print("start hotels")
+            hotels = await DataGetter.get_hotels_at_str(session, str_color=color, session_id=session_id)
+
             if hotels:
                 raise ValueError("There are hotels on the street")
             try:

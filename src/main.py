@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.templating import Jinja2Templates
 from fastapi.responses import Response
 from fastapi_users import FastAPIUsers
 from fastapi.staticfiles import StaticFiles
@@ -10,13 +11,13 @@ from src.auth.base_config import auth_backend
 from src.auth.models import User
 
 from src.game.router import router as game_session_router
+from src.actions.router import router as actions_router
 from src.core import Core
+from src.game.websocket import router as websocket_router
 
 app = FastAPI(
     title="Kharkiv monopoly",
 )
-
-app.mount("/templates", StaticFiles(directory="templates"), name="templates")
 
 fastapi_users = FastAPIUsers[User, int](
     get_user_manager,
@@ -36,6 +37,10 @@ app.include_router(
 )
 
 app.include_router(game_session_router)
+app.include_router(actions_router)
+app.include_router(websocket_router)
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.middleware("http")
 async def add_cache_control_header(request: Request, call_next):
@@ -46,7 +51,7 @@ async def add_cache_control_header(request: Request, call_next):
 
 @app.get("/", response_class=HTMLResponse)
 async def get():
-    with open("templates/html/monopoly.html") as f:
+    with open("../static/html/monopoly.html") as f:
         return HTMLResponse(content=f.read(), status_code=200)
 
 @app.head("/retabels")

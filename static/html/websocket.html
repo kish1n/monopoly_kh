@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>WebSocket Test</title>
+    </head>
+    <body>
+        <h1>WebSocket Test</h1>
+        <div id="messages"></div>
+        <input id="messageInput" type="text" autocomplete="off"/>
+        <button onclick="sendMessage()">Send</button>
+
+        <script>
+            const sessionId = "{{ session_id }}";
+        </script>
+        <script src="/static/js/websocket.js"></script>
+    </body>
+</html>

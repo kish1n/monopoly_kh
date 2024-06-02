@@ -8,7 +8,6 @@ from src.models import Player, GameSession, Board, Propertie
 from src.data.schemas import PropertyModel, GamerModel
 from src.data.utils import DataGetter, DataUpdater, DataSorted, DataChecker
 
-
 class GameUtils:
     @staticmethod
     async def join_game_session(session_id: str, player_name: str):
@@ -118,7 +117,6 @@ class GameUtils:
     ):
         async with session_factory() as session:
             async with session.begin():
-                # Получаем игроков-участников сделки
                 sender = await DataGetter.get_player_by_id(session, sender_player_id, session_id)
                 target = await DataGetter.get_player_by_id(session, target_player_id, session_id)
 
@@ -145,7 +143,6 @@ class GameUtils:
 
             return {"status": "ok"}
 
-#DataChecker надо переделать на ексекьут
     @staticmethod
     async def buy_possesion(session_id: int, player_id: int, property_id: int):
         async with session_factory() as session:
