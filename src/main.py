@@ -54,7 +54,10 @@ async def get():
     with open("../static/html/monopoly.html") as f:
         return HTMLResponse(content=f.read(), status_code=200)
 
-@app.head("/retabels")
+@app.head("/retabels",
+          summary="Recreate tables",
+          description="This endpoint recreates all tables in the database.",
+          tags=["game"])
 async def retabels():
     await Core.create_tables()
     return {"status": "ok"}

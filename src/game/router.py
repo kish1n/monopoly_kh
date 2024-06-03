@@ -49,3 +49,13 @@ async def get_session_data(session_id: int):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{session_id}/end_session")
+async def end_session(session_id: int):
+    try:
+        await GameUtils.delete_game_session(session_id=session_id)
+        return {"status": "ok"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

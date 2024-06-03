@@ -1,7 +1,7 @@
 from sqlalchemy.future import select
 
 from src.database import session_factory, engine, Base
-from src.models import Player, GameSession, Board, Propertie
+from src.models import Player, GameSession, Board, Property
 
 
 class Core:
@@ -12,7 +12,6 @@ class Core:
                 GameSession.__table__,
                 Player.__table__,
                 Board.__table__,
-                #Propertie.__table__
             ]
             await conn.run_sync(Base.metadata.drop_all, tables=tables_to_create_and_drop)
             await conn.run_sync(Base.metadata.create_all, tables=tables_to_create_and_drop)
@@ -33,7 +32,7 @@ class Core:
 
         async with session_factory() as session:
             for i in range(1, 11):
-                field = await session.execute(select(Propertie).filter_by(id=i))
+                field = await session.execute(select(Property).filter_by(id=i))
                 res = field.scalars().first()
                 new_board = Board(
                     game_session_id=new_game_session.id,

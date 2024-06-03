@@ -1,14 +1,19 @@
 from typing import List
-
+from sqlalchemy import delete
 from fastapi import HTTPException
 from sqlalchemy.future import select
 
 from src.database import session_factory
-from src.models import Player, GameSession, Board, Propertie
+from src.models import Player, GameSession, Board, Property
 from src.data.schemas import PropertyModel, GamerModel
 from src.data.utils import DataGetter, DataUpdater, DataSorted, DataChecker
 
 class GameUtils:
+
+    """METHODS FOR GAME SESSIONS"""
+
+    '''JOIN GAME SESSION'''
+
     @staticmethod
     async def join_game_session(session_id: str, player_name: str):
         async with session_factory() as session:
@@ -34,6 +39,8 @@ class GameUtils:
             await session.commit()
             await session.refresh(new_player)
             return new_player.id
+
+    '''GETTER METHODS'''
 
     @staticmethod
     async def get_possessions_state(session_id: int):
@@ -108,6 +115,116 @@ class GameUtils:
                 )
 
             return data_of_session
+
+    '''UPDATE METHODS'''
+
+    @staticmethod
+    async def update_improvement(session_id: int, property_id: int, increase: bool):
+        async with session_factory() as session:
+            async with session.begin():
+                game_field = await DataGetter.get_game_field(session, property_id, session_id)
+                await DataChecker.check_field_owner(game_field, game_field.owner_id)
+
+                field_data = await DataGetter.get_game_property(session, property_id)
+                if not field_data:
+                    raise ValueError(f"Field with id '{property_id}' does not exist.")
+
+                has_monopoly = await DataChecker.check_monopoly_for_player(
+                    session, session_id, game_field.owner_id, field_data.street_color
+                )
+                if not has_monopoly:
+                    raise ValueError(f"Player with id '{game_field.owner_id}' does not have a monopoly.")
+
+                has_mortgage = await DataChecker.check_mogage_for_player(
+                    session, session_id, game_field.owner_id, game_field.property_id
+                )
+                if has_mortgage:
+                    raise ValueError(f"Player with id '{game_field.owner_id}' has a mortgage.")
+
+                if game_field.type != 'prop':
+                    if game_field.type != 'special':
+                        pass
+                    else:
+                        raise ValueError(f"Field with id '{property_id}' is not a property.")
+
+                hotels = game_field.hotel_level
+                if hotels == 0 and not increase:
+                    raise ValueError(f"hotel_level of field with id '{property_id}' is already 0.")
+                if hotels == 5 and increase:
+                    raise ValueError(f"hotel_level {property_id} is max.")
+
+                game_field.hotel_level += 1 if increase else -1
+
+            await session.commit()
+            await session.refresh(game_field)
+
+        return game_field.hotel_level
+
+    @staticmethod
+    async def update_part_balance(session_id: str, player_id: int, delta_balance: int):
+        async with session_factory() as session:
+            async with session.begin():
+                player = await DataGetter.get_player_by_id(session, player_id, session_id)
+                player.balance += delta_balance
+
+                await session.commit()
+                await session.refresh(player)
+            return player
+
+    '''SETTER METHODS'''
+
+    @staticmethod
+    async def set_mortgage(session_id: int, property_id: int, mortgage: bool):
+        async with session_factory() as session:
+            async with session.begin():
+                game_field = await DataGetter.get_game_field(session, property_id, session_id)
+                await DataChecker.check_field_owner(game_field, game_field.owner_id)
+
+                # Проверяем тип поля
+                if game_field.type != 'prop' and game_field.type != 'special':
+                    raise ValueError(f"Field with id '{property_id}' is not a property.")
+
+                # Проверяем наличие улучшений
+                hotels = game_field.hotel_level
+                if hotels != 0 and mortgage:
+                    raise ValueError("Need to destroy hotels before mortgaging the property.")
+
+                # Обновляем статус ипотеки
+                game_field.mortgage = 1 if mortgage else 0
+
+                await session.commit()
+
+            await session.refresh(game_field)
+            return game_field.mortgage
+
+    @staticmethod
+    async def set_position(session_id: str, player_id: str, new_position: int):
+        return await DataUpdater.update_player_attribute(session_id, player_id, 'position', new_position % 10)
+
+    @staticmethod
+    async def set_balance(session_id: str, player_id: str, new_balance: int):
+        return await DataUpdater.update_player_attribute(session_id, player_id, 'balance', new_balance)
+
+    @staticmethod
+    async def set_prisson(session_id: str, player_id: str):
+        async with session_factory() as session:
+            async with session.begin():
+                player = await DataGetter.get_player_by_id(session, player_id, session_id)
+                player.prisson = not player.prisson
+
+            await session.commit()
+            await session.refresh(player)
+            return player.prisson
+
+    '''CHECKER METHODS'''
+
+    @staticmethod
+    async def checker_prisson(session_id: str, player_id: str):
+        async with session_factory() as session:
+            player = await DataGetter.get_player_by_id(session, player_id, session_id)
+            return player.prisson
+
+    '''ACTIONS METHODS'''
 
     @staticmethod
     async def make_trade(
@@ -193,7 +310,7 @@ class GameUtils:
                     else:
                         raise ValueError(f"Field with id '{property_id}' is not a property.")
 
-                equ = await DataChecker.chek_mogage_for_player(session, session_id=session_id,
+                equ = await DataChecker.check_mogage_for_player(session, session_id=session_id,
                                                                player_id=player_id, property_id=property_id)
                 if equ:
                     raise ValueError(f"Player with id '{player_id}' has a mortgage.")
@@ -204,83 +321,6 @@ class GameUtils:
             await session.refresh(game_field)
 
             return game_field.owner_id
-
-    @staticmethod
-    async def update_improvement(session_id: int, property_id: int, increase: bool):
-        async with session_factory() as session:
-            async with session.begin():
-                game_field = await DataGetter.get_game_field(session, property_id, session_id)
-                await DataChecker.check_field_owner(game_field, game_field.owner_id)
-
-                field_data = await DataGetter.get_game_property(session, property_id)
-                if not field_data:
-                    raise ValueError(f"Field with id '{property_id}' does not exist.")
-
-                has_monopoly = await DataChecker.check_monopoly_for_player(
-                    session, session_id, game_field.owner_id, field_data.street_color
-                )
-                if not has_monopoly:
-                    raise ValueError(f"Player with id '{game_field.owner_id}' does not have a monopoly.")
-
-                has_mortgage = await DataChecker.chek_mogage_for_player(
-                    session, session_id, game_field.owner_id, game_field.property_id
-                )
-                if has_mortgage:
-                    raise ValueError(f"Player with id '{game_field.owner_id}' has a mortgage.")
-
-                if game_field.type != 'prop':
-                    if game_field.type != 'special':
-                        pass
-                    else:
-                        raise ValueError(f"Field with id '{property_id}' is not a property.")
-
-                hotels = game_field.hotel_level
-                if hotels == 0 and not increase:
-                    raise ValueError(f"hotel_level of field with id '{property_id}' is already 0.")
-                if hotels == 5 and increase:
-                    raise ValueError(f"hotel_level {property_id} is max.")
-
-                game_field.hotel_level += 1 if increase else -1
-
-            await session.commit()
-            await session.refresh(game_field)
-
-        return game_field.hotel_level
-
-    @staticmethod
-    async def update_mortgage(session_id: int, property_id: int, mortgage: bool):
-        async with session_factory() as session:
-            async with session.begin():
-                game_field = await DataGetter.get_game_field(session, property_id, session_id)
-                await DataChecker.check_field_owner(game_field, game_field.owner_id)
-
-                # Проверяем тип поля
-                if game_field.type != 'prop' and game_field.type != 'special':
-                    raise ValueError(f"Field with id '{property_id}' is not a property.")
-
-                # Проверяем наличие улучшений
-                hotels = game_field.hotel_level
-                if hotels != 0 and mortgage:
-                    raise ValueError("Need to destroy hotels before mortgaging the property.")
-
-                # Обновляем статус ипотеки
-                game_field.mortgage = 1 if mortgage else 0
-
-                await session.commit()
-
-            await session.refresh(game_field)
-            return game_field.mortgage
-
-    @staticmethod
-    async def update_part_balance(session_id: str, player_id: int, delta_balance: int):
-        async with session_factory() as session:
-            async with session.begin():
-                player = await DataGetter.get_player_by_id(session, player_id, session_id)
-                player.balance += delta_balance
-
-                await session.commit()
-                await session.refresh(player)
-            return player
 
     @staticmethod
     async def change_owner_posession(session_id: int, player_id: int, property_id: int):
@@ -296,10 +336,24 @@ class GameUtils:
                 await session.refresh(game_field)
             return game_field.owner_id
 
-    @staticmethod
-    async def update_position(session_id: str, player_id: str, new_position: int):
-        return await DataUpdater.update_player_attribute(session_id, player_id, 'position', new_position % 10)
+    '''DELETE METHODS'''
 
     @staticmethod
-    async def update_balance(session_id: str, player_id: str, new_balance: int):
-        return await DataUpdater.update_player_attribute(session_id, player_id, 'balance', new_balance)
+    async def delete_game_session(session_id: int):
+        async with session_factory() as session:
+            async with session.begin():
+                # Удаляем связанные записи в таблице Board
+                await session.execute(
+                    delete(Board).where(Board.game_session_id == session_id)
+                )
+                # Удаляем связанные записи в таблице Player
+                await session.execute(
+                    delete(Player).where(Player.game_session_id == session_id)
+                )
+                # Удаляем запись в таблице GameSession
+                await session.execute(
+                    delete(GameSession).where(GameSession.id == session_id)
+                )
+            await session.commit()
+            return {"status": "ok"}
+

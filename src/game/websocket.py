@@ -29,6 +29,7 @@ class ConnectionManager:
             "players": [player.dict() for player in session_data["players"]]
         }
         await websocket.send_json(session_data_dict)
+        
 
 manager = ConnectionManager()
 

@@ -3,8 +3,8 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from src.database import Base
 
-class Propertie(Base):
-    __tablename__ = 'propertie'
+class Property(Base):
+    __tablename__ = 'property'
 
     id = Column(Integer, primary_key=True, index=True)
     type = Column(String, nullable=False)
@@ -35,6 +35,7 @@ class Player(Base):
     position = Column(Integer, default=0)
     balance = Column(Integer, default=1500)
     game_session = relationship("GameSession", back_populates="players")
+    prisson = Column(Boolean, default=False)
 
 GameSession.players = relationship("Player", order_by=Player.id, back_populates="game_session")
 
@@ -44,13 +45,13 @@ class Board(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     game_session_id = Column(Integer, ForeignKey('game_session.id'), nullable=False)
-    property_id = Column(Integer, ForeignKey('propertie.id'), nullable=True)
+    property_id = Column(Integer, ForeignKey('property.id'), nullable=True)
     type = Column(String, nullable=False)
     owner_id = Column(Integer, ForeignKey('player.id'), nullable=True)  # Владелец, если есть
     game_session = relationship("GameSession", back_populates="board_fields")
     hotel_level = Column(Integer, default=0)
     mortgage = Column(Integer, default=0)
-    property = relationship("Propertie")
+    property = relationship("Property")
     owner = relationship("Player", back_populates="owned_fields")
 
 GameSession.board_fields = relationship("Board", order_by=Board.property_id, back_populates="game_session")
